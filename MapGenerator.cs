@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public int width, height, roomsMin, roomsMax, roomSizeMin, roomSizeMax;
+    public int width, height, divideBy, sectorsToFillPercentage, roomSizeMin, roomSizeMax;
     private int[,] map;
     private Stuff stuff;
 
@@ -33,42 +33,40 @@ public class MapGenerator : MonoBehaviour
 
     private void GenerateRooms()
     {
-        int amount = UnityEngine.Random.Range(roomsMin, roomsMax);
-        int fails_in_a_row = 0;
-        for (int i = 0; i < amount;)
+        for (int x = 0; x < width / divideBy; x++)
         {
-            int centerX = UnityEngine.Random.Range(1 + (roomSizeMax / 2) - 1, width - (roomSizeMax / 2) - 1);
-            int centerY = UnityEngine.Random.Range(1 + (roomSizeMax / 2) - 1, height - (roomSizeMax / 2) - 1);
-
-            int roomSize = stuff.RoundToOdd(UnityEngine.Random.Range(roomSizeMin, roomSizeMax));
-            int halfsSize = roomSize / 2;
-            int leftwall = centerX - halfsSize;
-            int rightwall = centerX + halfsSize;
-            int botwall = centerY - halfsSize;
-            int topwall = centerY + halfsSize;
-            if (CheckEmpty(leftwall, botwall, roomSize))
+            for (int y = 0; y < width / divideBy; y++)
             {
-                map[centerY, centerX] = 3;
-                Debug.Log(String.Format("room center is located at {0},{1}", centerX, centerY));
-                Debug.Log(String.Format("room size is {0}", roomSize));
-                Debug.Log(String.Format("left wall is at {0}, right wall is at {1}, top wall is at {2}, bottom wall is at {3}", leftwall, rightwall, topwall, botwall));
-                Debug.Log(String.Format("checked for corner at {0},{1}", leftwall, botwall));
-                for (int y = botwall; y <= topwall; y++)
+                if (UnityEngine.Random.Range(0, 101) < sectorsToFillPercentage)
+
                 {
-                    for (int x = leftwall; x <= rightwall; x++)
-                    {
-                        if (map[y, x] == 0) map[y, x] = 1;
-                    }
+                    // if (!GenerateRandomRoom(x * divideBy, (x + 1) * divideBy, y * divideBy, (y + 1) * divideBy)) ;
                 }
-                fails_in_a_row = 0;
-                i++;
-            }
-            else {
-                if (fails_in_a_row > 10) break;
-                fails_in_a_row++;
-                continue;
             }
         }
+    }
+
+    private bool GenerateRandomRoom(int leftEdge, int rightEdge, int botEdge, int topEdge)
+    {
+        int horizontalSpace = rightEdge - leftEdge;
+        int verticalSpace = topEdge - botEdge;
+        if (horizontalSpace < roomSizeMin || verticalSpace < roomSizeMin)
+        {
+            Debug.Log(string.Format("leftEdge {0},rightEdge {1},botEdge {2},topEdge {3}", leftEdge, rightEdge, botEdge, topEdge));
+            return false;
+        }
+        int horizontalSize = UnityEngine.Random.Range(roomSizeMin, Math.Min(horizontalSpace, roomSizeMax));
+        int verticalSize = UnityEngine.Random.Range(roomSizeMin, Math.Min(verticalSpace, roomSizeMax)); ;
+        int horizontalOffset = UnityEngine.Random.Range(0, horizontalSpace - horizontalSize); ;
+        int verticalOffset = UnityEngine.Random.Range(0, verticalSpace - verticalSize);
+        for (int x = leftEdge + horizontalOffset; x <= leftEdge + horizontalSize + horizontalOffset; x++)
+        {
+            for (int y = botEdge + verticalOffset; y <= botEdge + verticalSize + verticalOffset; y++)
+            {
+                map[x, y] = 1;
+            }
+        }
+        return true;
     }
 
     private bool CheckEmpty(int cornerx, int cornery, int size)

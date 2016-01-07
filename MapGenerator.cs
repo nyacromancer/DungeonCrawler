@@ -4,7 +4,7 @@ using UnityEngine;
 public class MapGenerator : MonoBehaviour
 {
     public int width, height, divideBy, sectorsToFillPercentage, roomSizeMin, roomSizeMax;
-    private int[,] map;
+    public int[,] map;
     private Stuff stuff;
 
     // Use this for initialization
@@ -28,19 +28,22 @@ public class MapGenerator : MonoBehaviour
     {
         map = new int[width, height];
         GenerateRooms();
-        GenerateCorridors();
+        for (int i = 0; i < 5; i++)
+        {
+            SmoothMap();
+        }
     }
 
     private void GenerateRooms()
     {
         for (int x = 0; x < width / divideBy; x++)
         {
-            for (int y = 0; y < width / divideBy; y++)
+            for (int y = 0; y < height / divideBy; y++)
             {
                 if (UnityEngine.Random.Range(0, 101) < sectorsToFillPercentage)
 
                 {
-                    // if (!GenerateRandomRoom(x * divideBy, (x + 1) * divideBy, y * divideBy, (y + 1) * divideBy)) ;
+                    GenerateRandomRoom(x * divideBy, (x + 1) * divideBy, y * divideBy, (y + 1) * divideBy);
                 }
             }
         }
@@ -81,8 +84,42 @@ public class MapGenerator : MonoBehaviour
         return true;
     }
 
-    private void GenerateCorridors()
+    private void SmoothMap()
     {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (CalculateNeighbors(x, y) > 4) map[x, y] = 1;
+            }
+        }
+    }
+
+    public int CalculateNeighbors(int x, int y)
+    {
+        int count = 0;
+        for (int i = -1; i <= 1; i++)
+        {
+            if (x + i < 0 || x + i > width - 1) continue;
+            for (int ii = -1; ii <= 1; ii++)
+            {
+                if (y + ii < 0 || y + ii > height - 1) continue;
+                if (map[x + i, y + ii] != 0) count++;
+            }
+        }
+        return count;
+    }
+
+    public int CalculateNeighboringRooms(int x, int y)
+    {
+        for (int i = 0; i < width / divideBy; i++)
+        {
+            for (int ii = 0; ii < height / divideBy; ii++)
+            {
+                //do stuff to each sector
+            }
+        }
+        return 0;
     }
 
     private void OnDrawGizmos()
@@ -93,7 +130,7 @@ public class MapGenerator : MonoBehaviour
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Gizmos.color = (map[x, y] == 3) ? Color.cyan : (map[x, y] == 1) ? Color.black : Color.white;
+                    Gizmos.color = (map[x, y] == 0) ? Color.white : Color.black;
                     Vector3 pos = new Vector3(-width / 2 + x + .5f, -height / 2 + y + .5f, 0);
                     Gizmos.DrawCube(pos, Vector3.one);
                 }

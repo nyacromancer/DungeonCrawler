@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public int width, height, divideBy, sectorsToFillPercentage, roomSizeMin, roomSizeMax;
+    public int size, divideBy, sectorsToFillPercentage, roomSizeMin, roomSizeMax;
     public int[,] map;
     private Stuff stuff;
 
@@ -11,7 +11,7 @@ public class MapGenerator : MonoBehaviour
     private void Start()
     {
         stuff = new Stuff();
-        map = new int[width, height];
+        map = new int[size, size];
         GenerateMap();
     }
 
@@ -26,19 +26,24 @@ public class MapGenerator : MonoBehaviour
 
     private void GenerateMap()
     {
-        map = new int[width, height];
-        GenerateRooms();
-        for (int i = 0; i < 5; i++)
-        {
-            SmoothMap();
-        }
+        map = new int[size, size];
+        GenerateCorridors();
+        // GenerateRooms();
+    }
+
+    private void GenerateCorridors()
+    {
+        int[] pos = { 0, 0 }; // digger coordinates [x,y]
+        //setting starting position of digger to one of the corners
+        pos[0] = (UnityEngine.Random.value > 0.5) ? UnityEngine.Random.Range(size - 10, size) : UnityEngine.Random.Range(0, 10);
+        pos[1] = (UnityEngine.Random.value > 0.5) ? UnityEngine.Random.Range(size - 10, size) : UnityEngine.Random.Range(0, 10);
     }
 
     private void GenerateRooms()
     {
-        for (int x = 0; x < width / divideBy; x++)
+        for (int x = 0; x < size / divideBy; x++)
         {
-            for (int y = 0; y < height / divideBy; y++)
+            for (int y = 0; y < size / divideBy; y++)
             {
                 if (UnityEngine.Random.Range(0, 101) < sectorsToFillPercentage)
 
@@ -86,9 +91,9 @@ public class MapGenerator : MonoBehaviour
 
     private void SmoothMap()
     {
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < size; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < size; y++)
             {
                 if (CalculateNeighbors(x, y) > 4) map[x, y] = 1;
             }
@@ -100,10 +105,10 @@ public class MapGenerator : MonoBehaviour
         int count = 0;
         for (int i = -1; i <= 1; i++)
         {
-            if (x + i < 0 || x + i > width - 1) continue;
+            if (x + i < 0 || x + i > size - 1) continue;
             for (int ii = -1; ii <= 1; ii++)
             {
-                if (y + ii < 0 || y + ii > height - 1) continue;
+                if (y + ii < 0 || y + ii > size - 1) continue;
                 if (map[x + i, y + ii] != 0) count++;
             }
         }
@@ -112,9 +117,9 @@ public class MapGenerator : MonoBehaviour
 
     public int CalculateNeighboringRooms(int x, int y)
     {
-        for (int i = 0; i < width / divideBy; i++)
+        for (int i = 0; i < size / divideBy; i++)
         {
-            for (int ii = 0; ii < height / divideBy; ii++)
+            for (int ii = 0; ii < size / divideBy; ii++)
             {
                 //do stuff to each sector
             }
@@ -126,12 +131,12 @@ public class MapGenerator : MonoBehaviour
     {
         if (map != null)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < size; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < size; y++)
                 {
                     Gizmos.color = (map[x, y] == 0) ? Color.white : Color.black;
-                    Vector3 pos = new Vector3(-width / 2 + x + .5f, -height / 2 + y + .5f, 0);
+                    Vector3 pos = new Vector3(-size / 2 + x + .5f, -size / 2 + y + .5f, 0);
                     Gizmos.DrawCube(pos, Vector3.one);
                 }
             }

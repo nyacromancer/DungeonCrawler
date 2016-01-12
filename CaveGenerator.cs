@@ -5,10 +5,12 @@ using UnityEngine;
 
 public class CaveGenerator : MonoBehaviour
 {
-    public int fillPercentage, smoothTimes;
+    public int fillPercentage, smoothTimes, POI_amount, enemyAmount;
     public static int[,] map;
 
     private int[] entrancePos, exitPos;
+    private List<int[]> reachableTiles;
+    private int reachableTilesCount;
 
     [Range(40, 200)]
     public int size;
@@ -31,6 +33,7 @@ public class CaveGenerator : MonoBehaviour
 
     private void GenerateMap()
     {
+        map = new int[size, size];
         RandomFill();
         for (int i = 0; i < smoothTimes; i++)
         {
@@ -43,7 +46,25 @@ public class CaveGenerator : MonoBehaviour
     {
         entrancePos = PlaceEntrance();
         MarkReachableTiles(entrancePos);
+        if (reachableTilesCount + 1 < (size * size) * 0.45) GenerateMap(); // run generation again if only less than 45% of the map is accesible should probably move this somewhere else
+        //Debug.Log(String.Format("#{0},#{1}", reachableTiles.Count, reachableTilesCount));
         PlaceExit();
+        Debug.Log(String.Format("entrance is at #{0}, exit is at #{1}", entrancePos.ToString(), exitPos.ToString()));
+        for (int i = 0; i < POI_amount; i++)
+        {
+            PlacePOI();
+        }
+    }
+
+    private void PlacePOI()
+    {
+    }
+
+    private int[] GetRandomAvailableTile()
+    {
+        int[] tile = reachableTiles[(UnityEngine.Random.Range(0, reachableTilesCount))];
+        reachableTiles.Remove(tile);
+        return tile;
     }
 
     //place entrance and return it's position
@@ -69,22 +90,73 @@ public class CaveGenerator : MonoBehaviour
     //Marks tiles that can be reached from entrance point, used to avoid placing stuff in unreachable locations;
     private void MarkReachableTiles(int[] originPos)
     {
+        List<int[]> runners = new List<int[]>();
+        List<int[]> runners_a = new List<int[]>();
+        reachableTiles = new List<int[]>();
+
         int x = originPos[0];
         int y = originPos[1];
-        //go in spiral from entrance and mark  non-wall tiles if it has a marked tile in either direction from it
-    }
 
-    private bool CheckForMarkedTiles(int x, int y)
-    {
-        if (map[x + 1, y] == -1) return true;
-        if (map[x - 1, y] == -1) return true;
-        if (map[x, y + 1] == -1) return true;
-        if (map[x, y - 1] == -1) return true;
-        return false;
+        map[x + 1, y] = -1;
+        map[x - 1, y] = -1;
+        map[x, y + 1] = -1;
+        map[x, y - 1] = -1;
+
+        runners.Add(new int[] { x + 1, y });
+        runners.Add(new int[] { x - 1, y });
+        runners.Add(new int[] { x, y - 1 });
+        runners.Add(new int[] { x, y + 1 });
+
+        reachableTiles.AddRange(runners);
+        reachableTilesCount = 4;
+
+        while (runners.Count != 0)
+        {
+            runners_a.Clear();
+            foreach (int[] runner in runners)
+            {
+                int leftX = runner[0] - 1;
+                int rightX = runner[0] + 1;
+                int botX = runner[0];
+                int topX = runner[0];
+                int rightY = runner[1];
+                int leftY = runner[1];
+                int topY = runner[1] + 1;
+                int botY = runner[1] - 1;
+                if (map[leftX, leftY] == 0)
+                {
+                    reachableTilesCount++;
+                    map[leftX, leftY] = -1;
+                    runners_a.Add(new int[] { leftX, leftY });
+                }
+                if (map[topX, topY] == 0)
+                {
+                    reachableTilesCount++;
+                    map[topX, topY] = -1;
+                    runners_a.Add(new int[] { topX, topY });
+                }
+                if (map[rightX, rightY] == 0)
+                {
+                    reachableTilesCount++;
+                    map[rightX, rightY] = -1;
+                    runners_a.Add(new int[] { rightX, rightY });
+                }
+                if (map[botX, botY] == 0)
+                {
+                    reachableTilesCount++;
+                    map[botX, botY] = -1;
+                    runners_a.Add(new int[] { botX, botY });
+                }
+            }
+            runners = new List<int[]>(runners_a);
+            reachableTiles.AddRange(runners);
+        }
     }
 
     private void PlaceExit()
     {
+        exitPos = GetRandomAvailableTile();
+        map[exitPos[0], exitPos[1]] = 2;
     }
 
     private void RandomFill()

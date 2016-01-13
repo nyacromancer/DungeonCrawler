@@ -11,6 +11,7 @@ public class CaveGenerator : MonoBehaviour
     private int[] entrancePos, exitPos;
     private List<int[]> reachableTiles;
     private int reachableTilesCount;
+    private Stuff stuff;
 
     [Range(40, 200)]
     public int size;
@@ -18,7 +19,7 @@ public class CaveGenerator : MonoBehaviour
     // Use this for initialization
     private void Start()
     {
-        map = new int[size, size];
+        stuff = new Stuff();
         GenerateMap();
     }
 
@@ -46,10 +47,10 @@ public class CaveGenerator : MonoBehaviour
     {
         entrancePos = PlaceEntrance();
         MarkReachableTiles(entrancePos);
-        if (reachableTilesCount + 1 < (size * size) * 0.45) GenerateMap(); // run generation again if only less than 45% of the map is accesible should probably move this somewhere else
+        if (reachableTilesCount + 1 < (size * size) * 0.45) GenerateMap(); // run generation again if only less than 45% of the map is accesible //should probably move this check somewhere else
         //Debug.Log(String.Format("#{0},#{1}", reachableTiles.Count, reachableTilesCount));
         PlaceExit();
-        Debug.Log(String.Format("entrance is at #{0}, exit is at #{1}", entrancePos.ToString(), exitPos.ToString()));
+        Debug.Log(String.Format("entrance is at #{0},#{1} , exit is at #{2},#{3}", entrancePos[0], entrancePos[1], exitPos[0], exitPos[1]));
         for (int i = 0; i < POI_amount; i++)
         {
             PlacePOI();
@@ -58,6 +59,10 @@ public class CaveGenerator : MonoBehaviour
 
     private void PlacePOI()
     {
+        int[] tile = GetRandomAvailableTile();
+        int x = tile[0];
+        int y = tile[1];
+        map[x, y] = 3;
     }
 
     private int[] GetRandomAvailableTile()
@@ -213,6 +218,11 @@ public class CaveGenerator : MonoBehaviour
         return wallCount;
     }
 
+    private float DistanceFromEntrance(int x, int y)
+    {
+        return stuff.DistanceBetween(entrancePos[0], entrancePos[1], x, y);
+    }
+
     private void OnDrawGizmos()
     {
         if (map != null)
@@ -222,6 +232,7 @@ public class CaveGenerator : MonoBehaviour
                 for (int y = 0; y < size; y++)
                 {
                     Gizmos.color = (map[x, y] == -1) ? Color.yellow : (map[x, y] == 2) ? Color.red : (map[x, y] == 0) ? Color.white : Color.black;
+                    Gizmos.color = (map[x, y] == 3) ? Color.blue : Gizmos.color;
                     Vector3 pos = new Vector3(-size / 2 + x + .5f, -size / 2 + y + .5f, 0);
                     Gizmos.DrawCube(pos, Vector3.one);
                 }

@@ -24,15 +24,16 @@ public class CaveGenerator : MonoBehaviour
     }
 
     // Update is called once per frame
+    /*
     private void Update()
     {
         if (Input.GetButtonDown("Jump"))
         {
             GenerateMap();
         }
-    }
+    }*/
 
-    private void GenerateMap()
+    public int[,] GenerateMap()
     {
         map = new int[size, size];
         RandomFill();
@@ -41,6 +42,7 @@ public class CaveGenerator : MonoBehaviour
             SmoothMap();
         };
         PlaceStuff();
+        return map;
     }
 
     private void PlaceStuff()
